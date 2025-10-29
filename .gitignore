@@ -3,3 +3,6 @@ main.exe
 
 # Ignore any image outputs
 *.png
+
+# Ignore any benchmark outputs
+bench.txt
