@@ -47,3 +47,12 @@ ID: `4b70684aff1c9434ed40f32856272562eccd25bb`
        9.230506000 seconds user
        0.028909000 seconds sys
 ```
+
+## Change to C++
+
+ID:
+
+We change to C++. This does not invovle any major performance changes,
+it just allows us to utilize modern components.
+
+Performance is the same as previous entry.
