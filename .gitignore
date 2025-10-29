@@ -6,3 +6,5 @@ main.exe
 
 # Ignore any benchmark outputs
 bench.txt
+perf.data
+perf.data.old
