@@ -1,0 +1,5 @@
+# Ignore compiler artifacts
+main.exe
+
+# Ignore any image outputs
+*.png
