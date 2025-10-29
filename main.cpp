@@ -4,6 +4,56 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include <cstdint>
+
+///
+// Simulation Parameters
+///
+int L;          // Lattice size (L x L)
+double T;       // Temperature
+double J = 1.0; // Coupling constant
+int **lattice;
+
+/**
+ * Represents an entry in the lattice.
+ * 
+ * This class has some nice features,
+ * such as the ability to determine neighbor indecies during construction,
+ * and caching the energy at each entry.
+ */
+class Entry {
+private:
+  /// Spin value for this entry, either 1 or -1
+  /// TODO: Make this a bool instead?
+  int8_t val = 0;
+
+  /// Index of this entry in the lattice (0 to L*L-1)
+  int index = 0;
+
+  /// Index of right neighbor
+  int right = 0;
+
+  /// Index of left neighbor
+  int left = 0;
+
+  /// Index of up neighbor
+  int up = 0;
+
+  /// Index of down neighbor
+  int down = 0;
+
+  /// Energy of this entry, cached for performance
+  double energy = 0.;
+
+public:
+
+  /// Entries MUST know their index!
+  Entry() =delete;
+
+  /// Entries MUST be provided with their index!
+  Entry(int ind) : index(ind), right((index + 1) % L), left((index - 1) % L), up((index - L) % L), down((index + L) % L) {}
+};
+
 float tdiff(struct timeval *start, struct timeval *end) {
   return (end->tv_sec - start->tv_sec) + 1e-6 * (end->tv_usec - start->tv_usec);
 }
@@ -24,11 +74,6 @@ double randomDouble() {
   next2 >>= (64 - 26);
   return ((next << 27) + next2) / (double)(1LL << 53);
 }
-
-int L;          // Lattice size (L x L)
-double T;       // Temperature
-double J = 1.0; // Coupling constant
-int **lattice;
 
 void initializeLattice() {
   lattice = (int **)malloc(sizeof(int *) * L);
