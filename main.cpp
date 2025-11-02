@@ -5,24 +5,40 @@
 #include <sys/time.h>
 
 #include <cstdint>
+#include <vector>
 
 ///
 // Simulation Parameters
 ///
-int L;          // Lattice size (L x L)
-double T;       // Temperature
-double J = 1.0; // Coupling constant
-int **lattice;
+int L;                         // Lattice size (L x L)
+double T;                      // Temperature
+double J = 1.0;                // Coupling constant
+unsigned long long seed = 100; // Random value seed
+
+unsigned long long randomU64() {
+  seed ^= (seed << 21);
+  seed ^= (seed >> 35);
+  seed ^= (seed << 4);
+  return seed;
+}
+
+double randomDouble() {
+  unsigned long long next = randomU64();
+  next >>= (64 - 26);
+  unsigned long long next2 = randomU64();
+  next2 >>= (64 - 26);
+  return ((next << 27) + next2) / (double)(1LL << 53);
+}
 
 /**
  * Represents an entry in the lattice.
- * 
+ *
  * This class has some nice features,
  * such as the ability to determine neighbor indecies during construction,
  * and caching the energy at each entry.
  */
 class Entry {
-private:
+public:
   /// Spin value for this entry, either 1 or -1
   /// TODO: Make this a bool instead?
   int8_t val = 0;
@@ -45,81 +61,201 @@ private:
   /// Energy of this entry, cached for performance
   double energy = 0.;
 
-public:
+  /// Entries MUST know what they are apart of!
+  Entry() : val((randomDouble() < 0.5) ? -1 : 1) {};
 
-  /// Entries MUST know their index!
-  Entry() =delete;
+  /**
+   * @brief Converts row and column into absolute index
+   *
+   * @param row Row of entry
+   * @param col Column of entry
+   * @return int Absolute index
+   */
+  static int res_index(int row, int col) { return (row * L) + col; }
 
-  /// Entries MUST be provided with their index!
-  Entry(int ind) : index(ind), right((index + 1) % L), left((index - 1) % L), up((index - L) % L), down((index + L) % L) {}
+  void set_index(int i, int j) {
+
+    // int up = lattice[(i - 1 + L) % L][j];
+    // int down = lattice[(i + 1) % L][j];
+    // int left = lattice[i][(j - 1 + L) % L];
+    // int right = lattice[i][(j + 1) % L];
+
+    // Set the index value
+
+    index = res_index(i, j);
+
+    // Set all of the neighbor values
+
+    up = res_index((i - 1 + L) % L, j);
+    down = res_index((i + 1) % L, j);
+    right = res_index(i, (j - 1 + L) % L);
+    left = res_index(i, (j + 1) % L);
+  }
 };
+
+class Lattice {
+public:
+  /// Array of all values in this lattice
+  std::vector<Entry> vals;
+
+  /// Total energy in this lattice
+  double energyv = 0;
+
+  Lattice() = default;
+
+  void init() {
+    // Define the size of the lattice,
+    // and also include reference to us
+
+    vals.resize(L * L);
+
+    // Iterate over all rows and columns
+
+    for (int i = 0; i < L; ++i) {
+
+      for (int j = 0; j < L; ++j) {
+
+        // Set this index to be the current row and column
+        vals.at(Entry::res_index(i, j)).set_index(i, j);
+      }
+    }
+
+    // Now, compute total energy
+
+    total_energy();
+  }
+
+  /**
+   * @brief Computes the new energy at a specific index
+   *
+   * We compute the energy at this index,
+   * and save the energy value with the entry.
+   *
+   * @param ind Index to compute
+   */
+  void energy(int ind) {
+
+    auto &ent = vals.at(ind);
+
+    ent.energy = 0.5 * -J * ent.val *
+                 (vals.at(ent.up).val + vals.at(ent.down).val +
+                  vals.at(ent.left).val + vals.at(ent.right).val);
+  }
+
+  /**
+   * @brief Computes the total energy in this lattice
+   *
+   */
+  void total_energy() {
+
+    // Iterate over all values in the lattice
+
+    for (int i = 0; i < vals.size(); ++i) {
+
+      // Compute the energy at this value
+
+      energy(i);
+
+      energyv += vals.at(i).energy;
+    }
+  }
+
+  void update_energy(int ind) {
+
+    // Take the energy for the updated from the total
+
+    energyv -= vals.at(ind).energy;
+
+    // Compute the new energy at the position
+
+    energy(ind);
+
+    // Add the energy to the total
+
+    energyv += vals.at(ind).energy;
+  }
+};
+
+Lattice lattice;
 
 float tdiff(struct timeval *start, struct timeval *end) {
   return (end->tv_sec - start->tv_sec) + 1e-6 * (end->tv_usec - start->tv_usec);
 }
 
-unsigned long long seed = 100;
-
-unsigned long long randomU64() {
-  seed ^= (seed << 21);
-  seed ^= (seed >> 35);
-  seed ^= (seed << 4);
-  return seed;
-}
-
-double randomDouble() {
-  unsigned long long next = randomU64();
-  next >>= (64 - 26);
-  unsigned long long next2 = randomU64();
-  next2 >>= (64 - 26);
-  return ((next << 27) + next2) / (double)(1LL << 53);
-}
-
 void initializeLattice() {
-  lattice = (int **)malloc(sizeof(int *) * L);
-  for (int i = 0; i < L; i++) {
-    lattice[i] = (int *)malloc(sizeof(int) * L);
-    for (int j = 0; j < L; j++) {
-      lattice[i][j] = (randomDouble() < 0.5) ? -1 : 1;
-    }
-  }
+
+  // Call the init method on the lattice
+
+  lattice.init();
+
+  // lattice = (int **)malloc(sizeof(int *) * L);
+  // for (int i = 0; i < L; i++) {
+  //   lattice[i] = (int *)malloc(sizeof(int) * L);
+  //   for (int j = 0; j < L; j++) {
+  //     lattice[i][j] = (randomDouble() < 0.5) ? -1 : 1;
+  //   }
+  // }
 }
 
 double calculateTotalEnergy() {
   double energy = 0.0;
 
-  for (int i = 0; i < L; i++) {
-    for (int j = 0; j < L; j++) {
-      int spin = lattice[i][j];
+  // Iterate over all values in the lattice
 
-      int up = lattice[(i - 1 + L) % L][j];
-      int down = lattice[(i + 1) % L][j];
-      int left = lattice[i][(j - 1 + L) % L];
-      int right = lattice[i][(j + 1) % L];
+  for (int i = 0; i < lattice.vals.size(); ++i) {
 
-      energy += -J * spin * (up + down + left + right);
-    }
+    // Compute the energy at this value
+
+    lattice.energy(i);
+
+    energy += lattice.vals.at(i).energy;
   }
-  return 0.5 * energy;
+
+  // for (int i = 0; i < L; i++) {
+  //   for (int j = 0; j < L; j++) {
+  //     int spin = lattice[i][j];
+
+  //     int up = lattice[(i - 1 + L) % L][j];
+  //     int down = lattice[(i + 1) % L][j];
+  //     int left = lattice[i][(j - 1 + L) % L];
+  //     int right = lattice[i][(j + 1) % L];
+
+  //     energy += -J * spin * (up + down + left + right);
+  //   }
+  // }
+  // return 0.5 * energy;
+
+  return energy;
 }
 
 double calculateMagnetization() {
   double mag = 0.0;
-  for (int i = 0; i < L; i++) {
-    for (int j = 0; j < L; j++) {
-      mag += lattice[i][j];
-    }
+
+  for (int i = 0; i < lattice.vals.size(); ++i) {
+
+    mag += lattice.vals.at(i).val;
   }
+
+  // for (int i = 0; i < L; i++) {
+  //   for (int j = 0; j < L; j++) {
+  //     mag += lattice[i][j];
+  //   }
+  // }
   return mag / (L * L);
 }
 
 void metropolisHastingsStep() {
-  int i = (int)(randomDouble() * L);
-  int j = (int)(randomDouble() * L);
 
-  double E_before = calculateTotalEnergy();
-  lattice[i][j] *= -1;
-  double E_after = calculateTotalEnergy();
+  int i = (int)(randomDouble() * L * L);
+
+  double E_before = lattice.energyv;
+  lattice.vals.at(i).val *= -1;
+
+  // Update the energy at the new position
+
+  lattice.update_energy(i);
+
+  double E_after = lattice.energyv;
   double dE = E_after - E_before;
 
   if (dE <= 0.0) {
@@ -128,7 +264,14 @@ void metropolisHastingsStep() {
 
   double prob = exp(-dE / T);
   if (randomDouble() >= prob) {
-    lattice[i][j] *= -1;
+
+    // Update the value at this position
+
+    lattice.vals.at(i).val *= -1;
+
+    // Update the energy at this position
+
+    lattice.update_energy(i);
   }
 }
 
@@ -146,22 +289,20 @@ void saveLatticeImage(const char *png_filename) {
   fprintf(f, "%d %d\n", L, L);
   fprintf(f, "255\n");
 
-  for (int i = 0; i < L; i++) {
-    for (int j = 0; j < L; j++) {
-      unsigned char r, g, b;
-      if (lattice[i][j] == 1) {
-        r = 255;
-        g = 255;
-        b = 255;
-      } else {
-        r = 0;
-        g = 50;
-        b = 200;
-      }
-      fwrite(&r, 1, 1, f);
-      fwrite(&g, 1, 1, f);
-      fwrite(&b, 1, 1, f);
+  for (int i = 0; i < L * L; ++i) {
+    unsigned char r, g, b;
+    if (lattice.vals.at(i).val == 1) {
+      r = 255;
+      g = 255;
+      b = 255;
+    } else {
+      r = 0;
+      g = 50;
+      b = 200;
     }
+    fwrite(&r, 1, 1, f);
+    fwrite(&g, 1, 1, f);
+    fwrite(&b, 1, 1, f);
   }
 
   fclose(f);
@@ -211,10 +352,13 @@ void sanityCheck(double energy, double mag_per_spin, const char *stage) {
 }
 
 void freeLattice() {
-  for (int i = 0; i < L; i++) {
-    free(lattice[i]);
-  }
-  free(lattice);
+  // for (int i = 0; i < L; i++) {
+  //   free(lattice[i]);
+  // }
+  // free(lattice);
+
+  // We use a C++ vector, which simplifies memory management
+  // so we simply do nothing
 }
 
 int main(int argc, const char **argv) {
@@ -240,7 +384,7 @@ int main(int argc, const char **argv) {
 
   initializeLattice();
 
-  double initial_energy = calculateTotalEnergy();
+  double initial_energy = lattice.energyv;
   double initial_mag = calculateMagnetization();
   printf("Initial energy: %.4f\n", initial_energy);
   printf("Initial magnetization: %.4f\n\n", initial_mag);
@@ -258,7 +402,7 @@ int main(int argc, const char **argv) {
 
   gettimeofday(&end, NULL);
 
-  double final_energy = calculateTotalEnergy();
+  double final_energy = lattice.energyv;
   double final_mag = calculateMagnetization();
 
   printf("\nFinal energy: %.4f\n", final_energy);
