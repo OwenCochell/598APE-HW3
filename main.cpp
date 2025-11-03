@@ -137,7 +137,7 @@ public:
 
     auto &ent = vals.at(ind);
 
-    ent.energy = 0.5 * -J * ent.val *
+    ent.energy = -J * ent.val *
                  (vals.at(ent.up).val + vals.at(ent.down).val +
                   vals.at(ent.left).val + vals.at(ent.right).val);
   }
@@ -248,14 +248,14 @@ void metropolisHastingsStep() {
 
   int i = (int)(randomDouble() * L * L);
 
-  double E_before = lattice.energyv;
+  double E_before = lattice.energyv * 0.5;
   lattice.vals.at(i).val *= -1;
 
   // Update the energy at the new position
 
   lattice.update_energy(i);
 
-  double E_after = lattice.energyv;
+  double E_after = lattice.energyv * 0.5;
   double dE = E_after - E_before;
 
   if (dE <= 0.0) {
