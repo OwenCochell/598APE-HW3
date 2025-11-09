@@ -187,7 +187,7 @@ which slightly improves performance in some cases.
 
 ## Compiler flags and parallel computing
 
-ID:
+ID: `c4461366855fdf8e37542433ba85beac57f1335e`
 
 We enable some compiler optimizations, as well as make the primary loop run in parallel.
 This leads to some large performance improvements.
