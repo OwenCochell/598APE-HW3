@@ -59,7 +59,7 @@ Performance is the same as previous entry.
 
 ## Energy Caching
 
-ID:
+ID: `03163ac0e00d87008c7816d737a20022aaa03ae6`
 
 We cache the energy value for each entry,
 meaning we no longer need to recompute the energy values after each loop.
