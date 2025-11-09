@@ -124,7 +124,7 @@ This leads to some good performance improvements.
 
 ## Better image writing
 
-ID:
+ID: `54f3335d2a11ae14821733d6a1fd72165633690a`
 
 We write all the image data at once,
 which slightly improves performance in some cases.
