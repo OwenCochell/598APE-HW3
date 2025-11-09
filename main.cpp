@@ -381,16 +381,6 @@ void sanityCheck(double energy, double mag_per_spin, const char *stage) {
   printf("\n");
 }
 
-void freeLattice() {
-  // for (int i = 0; i < L; i++) {
-  //   free(lattice[i]);
-  // }
-  // free(lattice);
-
-  // We use a C++ vector, which simplifies memory management
-  // so we simply do nothing
-}
-
 int main(int argc, const char **argv) {
   if (argc < 4) {
     printf("Usage: %s <lattice_size> <temperature> <steps>\n", argv[0]);
@@ -426,6 +416,7 @@ int main(int argc, const char **argv) {
   struct timeval start, end;
   gettimeofday(&start, NULL);
 
+#pragma omp parallel for
   for (int step = 0; step < steps; step++) {
     metropolisHastingsStep();
   }
@@ -444,6 +435,5 @@ int main(int argc, const char **argv) {
 
   saveLatticeImage("final_state.png");
 
-  freeLattice();
   return 0;
 }

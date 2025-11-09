@@ -184,3 +184,66 @@ which slightly improves performance in some cases.
      106.651704000 seconds user
        0.121919000 seconds sys
 ```
+
+## Compiler flags and parallel computing
+
+ID:
+
+We enable some compiler optimizations, as well as make the primary loop run in parallel.
+This leads to some large performance improvements.
+
+```
+ Performance counter stats for './main.exe 100 2.269 100000':
+
+       207,245,956      task-clock:u                     #    8.314 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             2,378      page-faults:u                    #   11.474 K/sec                     
+       142,454,647      instructions:u                   #    0.16  insn per cycle            
+                                                  #    0.04  stalled cycles per insn   
+       890,711,587      cycles:u                         #    4.298 GHz                       
+         6,036,099      stalled-cycles-frontend:u        #    0.68% frontend cycles idle      
+        32,981,211      branches:u                       #  159.140 M/sec                     
+           375,930      branch-misses:u                  #    1.14% of all branches           
+
+       0.024928164 seconds time elapsed
+
+       0.196378000 seconds user
+       0.011308000 seconds sys
+
+ Performance counter stats for './main.exe 1024 2.269 100000000':
+
+    28,601,610,389      task-clock:u                     #   20.201 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             7,045      page-faults:u                    #  246.315 /sec                      
+    16,815,197,353      instructions:u                   #    0.13  insn per cycle            
+                                                  #    0.03  stalled cycles per insn   
+   129,410,777,497      cycles:u                         #    4.525 GHz                       
+       483,468,561      stalled-cycles-frontend:u        #    0.37% frontend cycles idle      
+     1,611,779,352      branches:u                       #   56.353 M/sec                     
+        69,721,342      branch-misses:u                  #    4.33% of all branches           
+
+       1.415833362 seconds time elapsed
+
+      28.201366000 seconds user
+       0.183878000 seconds sys
+
+ Performance counter stats for './main.exe 1024 2.269 100000000000':
+
+   342,991,270,263      task-clock:u                     #   22.149 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             7,041      page-faults:u                    #   20.528 /sec                      
+   185,300,180,525      instructions:u                   #    0.12  insn per cycle            
+                                                  #    0.03  stalled cycles per insn   
+ 1,546,519,242,701      cycles:u                         #    4.509 GHz                       
+     4,858,997,557      stalled-cycles-frontend:u        #    0.31% frontend cycles idle      
+    16,421,452,367      branches:u                       #   47.877 M/sec                     
+       880,252,776      branch-misses:u                  #    5.36% of all branches           
+
+      15.485308393 seconds time elapsed
+
+     338.364069000 seconds user
+       1.792798000 seconds sys
+```
