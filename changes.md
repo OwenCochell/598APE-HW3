@@ -121,3 +121,66 @@ This leads to some good performance improvements.
      106.008894000 seconds user
        0.064508000 seconds sys
 ```
+
+## Better image writing
+
+ID:
+
+We write all the image data at once,
+which slightly improves performance in some cases.
+
+```
+ Performance counter stats for './main.exe 100 2.269 100000':
+
+        20,699,977      task-clock:u                     #    0.898 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             2,307      page-faults:u                    #  111.449 K/sec                     
+        67,612,207      instructions:u                   #    1.38  insn per cycle            
+                                                  #    0.08  stalled cycles per insn   
+        49,070,910      cycles:u                         #    2.371 GHz                       
+         5,113,576      stalled-cycles-frontend:u        #   10.42% frontend cycles idle      
+        11,329,838      branches:u                       #  547.336 M/sec                     
+           376,573      branch-misses:u                  #    3.32% of all branches           
+
+       0.023048803 seconds time elapsed
+
+       0.009955000 seconds user
+       0.012433000 seconds sys
+
+ Performance counter stats for './main.exe 1024 2.269 100000000':
+
+     8,679,040,690      task-clock:u                     #    1.004 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             6,458      page-faults:u                    #  744.091 /sec                      
+    17,689,478,172      instructions:u                   #    0.43  insn per cycle            
+                                                  #    0.02  stalled cycles per insn   
+    41,427,237,078      cycles:u                         #    4.773 GHz                       
+       365,541,520      stalled-cycles-frontend:u        #    0.88% frontend cycles idle      
+     1,673,932,754      branches:u                       #  192.871 M/sec                     
+        80,528,635      branch-misses:u                  #    4.81% of all branches           
+
+       8.647882171 seconds time elapsed
+
+       8.616435000 seconds user
+       0.024367000 seconds sys
+
+ Performance counter stats for './main.exe 1024 2.269 100000000000':
+
+   107,271,888,752      task-clock:u                     #    1.000 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             6,461      page-faults:u                    #   60.230 /sec                      
+   202,451,901,109      instructions:u                   #    0.39  insn per cycle            
+                                                  #    0.02  stalled cycles per insn   
+   513,095,552,745      cycles:u                         #    4.783 GHz                       
+     4,183,320,151      stalled-cycles-frontend:u        #    0.82% frontend cycles idle      
+    17,870,325,298      branches:u                       #  166.589 M/sec                     
+       916,495,501      branch-misses:u                  #    5.13% of all branches           
+
+     107.322373100 seconds time elapsed
+
+     106.651704000 seconds user
+       0.121919000 seconds sys
+```

@@ -176,6 +176,17 @@ public:
   }
 };
 
+/**
+ * @brief Represents a color
+ *
+ */
+struct Color {
+
+  uint8_t r = 0;
+  uint8_t g = 0;
+  uint8_t b = 0;
+};
+
 Lattice lattice;
 
 float tdiff(struct timeval *start, struct timeval *end) {
@@ -289,21 +300,40 @@ void saveLatticeImage(const char *png_filename) {
   fprintf(f, "%d %d\n", L, L);
   fprintf(f, "255\n");
 
+  // Define container for all color data
+  // Will be all positions times three for each color channel
+
+  std::vector<Color> cdata(L * L);
+
   for (int i = 0; i < L * L; ++i) {
-    unsigned char r, g, b;
+
+    auto &color = cdata.at(i);
+
     if (lattice.vals.at(i).val == 1) {
-      r = 255;
-      g = 255;
-      b = 255;
+
+      color.r = 255;
+      color.g = 255;
+      color.b = 255;
+      // r = 255;
+      // g = 255;
+      // b = 255;
     } else {
-      r = 0;
-      g = 50;
-      b = 200;
+
+      color.r = 0;
+      color.g = 50;
+      color.b = 200;
+      // r = 0;
+      // g = 50;
+      // b = 200;
     }
-    fwrite(&r, 1, 1, f);
-    fwrite(&g, 1, 1, f);
-    fwrite(&b, 1, 1, f);
+    // fwrite(&r, 1, 1, f);
+    // fwrite(&g, 1, 1, f);
+    // fwrite(&b, 1, 1, f);
   }
+
+  // Write the full color data to the file at once
+
+  fwrite(cdata.data(), sizeof(Color), L * L, f);
 
   fclose(f);
 
