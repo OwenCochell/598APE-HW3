@@ -1,3 +1,13 @@
+# For Reviewers
+
+This project can run without any extra dependencies, only a modern compiler is necessary.
+
+The times of each stage will be printed to standard output, and the results of the operation will be placed in the `output` directory. We run the three scenarios as described later in this readme.
+
+We also provide a simple script, `bench.sh`, which will run each scenario and print the times to `bench.txt`. `profile.sh` runs a scenario via perf to get profling info. Once the profile is complete, you can see the report via `perf report`.
+
+Finally, to see notes on each change and the relevant benchmark info, have a look at `changes.md`. It contains all the improvements and their git IDs, so you can seek back to the codebase when that change was implemented to preform testing. Please note that every time you checkout to a commit, you must rebuild the docker image!
+
 # 598APE-HW3
 
 This repository contains code for homework 3 of 598APE.
